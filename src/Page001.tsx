@@ -27,6 +27,15 @@ export function Page001() {
           height={550}
           groupBy={"type_ligne"}
           size={0.65}
+          colors={(k) =>
+            k.startsWith("Ligne")
+              ? `hsl(0, 80%, 35%)`
+              : k.startsWith("Voie-mère")
+              ? `hsl(90, 80%, 35%)`
+              : k.startsWith("Voie de")
+              ? `hsl(180, 80%, 35%)`
+              : `hsl(270, 80%, 35%)`
+          }
         />
         <HorizontalBarGraph
           title={"Ligne par type"}
@@ -35,7 +44,7 @@ export function Page001() {
           width={Math.min(500, width - 50)}
           height={600}
           legendWidth={200}
-          barColor={"red"}
+          barColor={(_, v, m) => `hsl(${(v / m) * 120}, 80%, 35%)`}
           groupBy={"region"}
         />
       </div>
@@ -45,7 +54,7 @@ export function Page001() {
         data={lignesSpeed}
         width={width - 50}
         height={300}
-        barColor={"red"}
+        barColor={(_, v, m) => `hsl(${(v / m) * 120}, 80%, 35%)`}
         groupBy={"v_max"}
         legendHeight={30}
       />
