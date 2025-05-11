@@ -4,7 +4,7 @@ import { useFetch } from "../useFetch";
 import { IFetchState } from "../Interfaces/FetchState.itf";
 
 export type TLigneSpeed = {
-  v_max: number;
+  v_max: number | null;
   code_ligne: string;
 };
 
