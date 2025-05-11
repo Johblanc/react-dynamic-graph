@@ -6,7 +6,7 @@ interface IVerticalBarGraphProps<TData = Object> {
   data: TData[];
   width: number;
   height: number;
-  barColor: string;
+  barColor: string | ((key: string, value: number, max: number) => string);
   groupBy: keyof TData;
   legendHeight?: number;
 }
@@ -164,7 +164,11 @@ export function VerticalBarGraph<TData = Object>({
                   y={height - legendHeight - barHeight}
                   height={barHeight}
                   width={barWidth - 2}
-                  fill={barColor}
+                  fill={
+                    typeof barColor === "string"
+                      ? barColor
+                      : barColor(key, value, maxValue)
+                  }
                 />
                 <text
                   x={index * barWidth + barWidth / 2}
