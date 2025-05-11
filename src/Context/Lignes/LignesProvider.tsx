@@ -3,6 +3,7 @@ import { useFetchLigneType } from "../../Hooks/Fetch/SNCF/useFetchLignesType";
 import { LignesContext } from "./LignesContext";
 import { useFetchLigneRegion } from "../../Hooks/Fetch/SNCF/useFetchLignesRegion";
 import { useFetchLigneSpeed } from "../../Hooks/Fetch/SNCF/useFetchLignesSpeed";
+import { TLigne } from "./Ligne.type";
 
 interface ILigneProviderProps {
   children?: JSX.Element | JSX.Element[] | string | string[];
@@ -178,6 +179,41 @@ export function LigneProvider({ children }: ILigneProviderProps) {
     ]
   );
 
+  const lignes: TLigne[] = useMemo(() => {
+    const result = lignesTypes.reduce((acc, l) => {
+      if (acc.some((a) => a.code_ligne === l.code_ligne)) {
+        const index = acc.findIndex((a) => a.code_ligne === l.code_ligne);
+        acc[index].types_lignes.push(l.type_ligne);
+      }
+      return [
+        ...acc,
+        {
+          code_ligne: l.code_ligne,
+          lib_ligne: l.lib_ligne,
+          types_lignes: [l.type_ligne],
+          regions: [],
+          speeds: [],
+        },
+      ];
+    }, [] as TLigne[]);
+
+    lignesRegions.forEach((l) => {
+      const index = result.findIndex((a) => a.code_ligne === l.code_ligne);
+      if (index !== -1) {
+        result[index].regions.push(l.region);
+      }
+    });
+
+    lignesSpeed.forEach((l) => {
+      const index = result.findIndex((a) => a.code_ligne === l.code_ligne);
+      if (index !== -1) {
+        result[index].speeds.push(l.v_max);
+      }
+    });
+
+    return result;
+  }, [lignesTypes, lignesRegions, lignesSpeed]);
+
   useEffect(() => {
     runLigneType01(1);
     runLigneType02(2);
@@ -283,7 +319,9 @@ export function LigneProvider({ children }: ILigneProviderProps) {
   ]);
 
   return (
-    <LignesContext.Provider value={{ lignesTypes, lignesRegions, lignesSpeed }}>
+    <LignesContext.Provider
+      value={{ lignesTypes, lignesRegions, lignesSpeed, lignes }}
+    >
       {children}
     </LignesContext.Provider>
   );
