@@ -6,7 +6,7 @@ interface ICircularGraphProps<TData = Object> {
   data: TData[];
   width: number;
   height: number;
-  colors?: string[];
+  colors?: string[] | ((key: string, value: number, max: number) => string);
   groupBy: keyof TData;
   size?: number;
 }
@@ -188,7 +188,11 @@ export function CircularGraph<TData = Object>({
                   ].join("")}
                   opacity={1}
                   fill={
-                    colors.length > 0 ? colors[index % colors.length] : "red"
+                    typeof colors === "function"
+                      ? colors(key, value, totalValue)
+                      : colors.length > 0
+                      ? colors[index % colors.length]
+                      : "red"
                   }
                   strokeWidth={2}
                 />
@@ -198,7 +202,11 @@ export function CircularGraph<TData = Object>({
                   width={10}
                   height={10}
                   fill={
-                    colors.length > 0 ? colors[index % colors.length] : "red"
+                    typeof colors === "function"
+                      ? colors(key, value, totalValue)
+                      : colors.length > 0
+                      ? colors[index % colors.length]
+                      : "red"
                   }
                 />
                 <text
