@@ -19,42 +19,36 @@ export function Page001() {
           justifyContent: "space-around",
         }}
       >
-        <div>
-          <h2>Ligne par type</h2>
-          <CircularGraph
-            id={"lignes-type"}
-            data={lignesTypes}
-            width={Math.min(400, width - 50)}
-            height={550}
-            groupBy={"type_ligne"}
-            size={0.65}
-          />
-        </div>
-        <div>
-          <h2>Ligne par type</h2>
-          <HorizontalBarGraph
-            id={"lignes-region"}
-            data={lignesRegions}
-            width={Math.min(500, width - 50)}
-            height={600}
-            legendWidth={200}
-            barColor={"red"}
-            groupBy={"region"}
-          />
-        </div>
-      </div>
-      <div>
-        <h2>Ligne par Vitesse</h2>
-        <VerticalBarGraph
-          id={"lignes-speed"}
-          data={lignesSpeed}
-          width={width - 50}
-          height={300}
+        <CircularGraph
+          title={"Ligne par type"}
+          id={"lignes-type"}
+          data={lignesTypes}
+          width={Math.min(400, width - 50)}
+          height={550}
+          groupBy={"type_ligne"}
+          size={0.65}
+        />
+        <HorizontalBarGraph
+          title={"Ligne par type"}
+          id={"lignes-region"}
+          data={lignesRegions}
+          width={Math.min(500, width - 50)}
+          height={600}
+          legendWidth={200}
           barColor={"red"}
-          groupBy={"v_max"}
-          legendHeight={30}
+          groupBy={"region"}
         />
       </div>
+      <VerticalBarGraph
+        title={"Ligne par Vitesse"}
+        id={"lignes-speed"}
+        data={lignesSpeed}
+        width={width - 50}
+        height={300}
+        barColor={"red"}
+        groupBy={"v_max"}
+        legendHeight={30}
+      />
       <div
         style={{
           marginTop: "20px",
