@@ -9,6 +9,10 @@ interface IHorizontalBarGraphProps<TData = Object> {
   barColor: string | ((key: string, value: number, max: number) => string);
   groupBy: keyof TData;
   legendWidth?: number;
+  filteredKey?: keyof TData;
+  filteredData?: TData[];
+  onClick?: (key: string, ctrl?: boolean) => void;
+  incluedKeys?: string[];
 }
 
 export function HorizontalBarGraph<TData = Object>({
@@ -20,6 +24,10 @@ export function HorizontalBarGraph<TData = Object>({
   barColor,
   groupBy,
   legendWidth = width / 2,
+  filteredKey,
+  filteredData = [],
+  onClick,
+  incluedKeys,
 }: IHorizontalBarGraphProps<TData>) {
   const [sortMode, setSortMode] = useState<"A-Z" | "Z-A" | "0-9" | "9-0">(
     "9-0"
@@ -29,24 +37,37 @@ export function HorizontalBarGraph<TData = Object>({
       data.reduce(
         (acc, item) => {
           const key = String(item[groupBy]);
+          const isIncluded =
+            filteredKey === undefined ||
+            filteredData.length === 0 ||
+            filteredData.some((d) => d[filteredKey] === item[filteredKey]);
           if ({ [key]: undefined, ...acc }[key] === undefined) {
             return {
               ...acc,
-              [key]: 1,
+              [key]: { all: 1, filtered: isIncluded ? 1 : 0 },
             };
           }
           return {
             ...acc,
-            [key]: acc[key] + 1,
+            [key]: {
+              all: acc[key].all + 1,
+              filtered: acc[key].filtered + (isIncluded ? 1 : 0),
+            },
           };
         },
         {} as {
-          [key: string]: number;
+          [key: string]: {
+            all: number;
+            filtered: number;
+          };
         }
       ),
-    [data, groupBy]
+    [data, groupBy, filteredKey, filteredData]
   );
-  const maxValue = useMemo(() => Math.max(...Object.values(values)), [values]);
+  const maxValue = useMemo(
+    () => Math.max(...Object.values(values).map((v) => v.all)),
+    [values]
+  );
   const barHeight = useMemo(
     () => height / Object.keys(values).length,
     [values, height]
@@ -93,10 +114,10 @@ export function HorizontalBarGraph<TData = Object>({
       </div>
       <svg
         id={id}
-        width={width}
-        height={height}
+        width={Math.max(0, width)}
+        height={Math.max(0, height)}
         version="1.1"
-        viewBox={`0 0 ${width} ${height}`}
+        viewBox={`0 0 ${Math.max(0, width)} ${Math.max(0, height)}`}
         xmlns="http://www.w3.org/2000/svg"
       >
         <defs>
@@ -129,16 +150,21 @@ export function HorizontalBarGraph<TData = Object>({
                 }
                 return Number(keyB) - Number(keyA);
               case "0-9":
-                return valueA - valueB;
+                return (
+                  valueA.filtered - valueB.filtered || valueA.all - valueB.all
+                );
               default:
-                return valueB - valueA;
+                return (
+                  valueB.filtered - valueA.filtered || valueB.all - valueA.all
+                );
             }
           })
           .map(([key, value], index) => {
-            const barWidth = (value / maxValue) * (width - legendWidth);
+            const barWidth = (value.all / maxValue) * (width - legendWidth);
             return (
               <g key={index}>
                 <text
+                  onClick={onClick ? (e) => onClick(key, e.ctrlKey) : undefined}
                   x={0}
                   y={index * barHeight + barHeight / 2}
                   textAnchor="start"
@@ -146,12 +172,20 @@ export function HorizontalBarGraph<TData = Object>({
                   fill={`url(#${id}-gradient)`}
                   width={width}
                   style={{
-                    overflow: "hidden",
+                    cursor: "pointer",
                   }}
+                  fillOpacity={
+                    !incluedKeys ||
+                    incluedKeys.length === 0 ||
+                    incluedKeys.includes(key)
+                      ? 1
+                      : 0.5
+                  }
                 >
                   {key}
                 </text>
                 <rect
+                  onClick={onClick ? (e) => onClick(key, e.ctrlKey) : undefined}
                   x={legendWidth}
                   y={index * barHeight}
                   height={barHeight - 2}
@@ -159,27 +193,54 @@ export function HorizontalBarGraph<TData = Object>({
                   fill={
                     typeof barColor === "string"
                       ? barColor
-                      : barColor(key, value, maxValue)
+                      : barColor(key, value.all, maxValue)
                   }
+                  fillOpacity={0.3}
+                  style={{
+                    cursor: "pointer",
+                    transition: "all 0.3s",
+                  }}
+                />
+                <rect
+                  onClick={onClick ? (e) => onClick(key, e.ctrlKey) : undefined}
+                  x={legendWidth}
+                  y={index * barHeight}
+                  height={barHeight - 2}
+                  width={barWidth * (value.filtered / value.all)}
+                  fill={
+                    typeof barColor === "string"
+                      ? barColor
+                      : barColor(key, value.filtered, maxValue)
+                  }
+                  style={{
+                    cursor: "pointer",
+                    transition: "all 0.3s",
+                  }}
                 />
                 <text
-                  x={legendWidth + barWidth + (value < maxValue / 2 ? 5 : -5)}
+                  onClick={onClick ? (e) => onClick(key, e.ctrlKey) : undefined}
+                  x={
+                    legendWidth +
+                    barWidth * (value.filtered / value.all) +
+                    (value.filtered < maxValue / 2 ? 5 : -5)
+                  }
                   y={index * barHeight + barHeight / 2}
-                  textAnchor={value < maxValue / 2 ? "start" : "end"}
+                  textAnchor={value.filtered < maxValue / 2 ? "start" : "end"}
                   alignmentBaseline="middle"
                   fill={
-                    value < maxValue / 2
+                    value.filtered < maxValue / 2
                       ? typeof barColor === "string"
                         ? barColor
-                        : barColor(key, value, maxValue)
+                        : barColor(key, value.filtered, maxValue)
                       : "white"
                   }
                   width={width}
                   style={{
-                    overflow: "hidden",
+                    cursor: "pointer",
+                    transition: "all 0.3s",
                   }}
                 >
-                  {value}
+                  {value.filtered}
                 </text>
               </g>
             );
