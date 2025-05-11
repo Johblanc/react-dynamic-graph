@@ -6,7 +6,7 @@ interface IHorizontalBarGraphProps<TData = Object> {
   data: TData[];
   width: number;
   height: number;
-  barColor: string;
+  barColor: string | ((key: string, value: number, max: number) => string);
   groupBy: keyof TData;
   legendWidth?: number;
 }
@@ -156,14 +156,24 @@ export function HorizontalBarGraph<TData = Object>({
                   y={index * barHeight}
                   height={barHeight - 2}
                   width={barWidth}
-                  fill={barColor}
+                  fill={
+                    typeof barColor === "string"
+                      ? barColor
+                      : barColor(key, value, maxValue)
+                  }
                 />
                 <text
                   x={legendWidth + barWidth + (value < maxValue / 2 ? 5 : -5)}
                   y={index * barHeight + barHeight / 2}
                   textAnchor={value < maxValue / 2 ? "start" : "end"}
                   alignmentBaseline="middle"
-                  fill={value < maxValue / 2 ? barColor : "white"}
+                  fill={
+                    value < maxValue / 2
+                      ? typeof barColor === "string"
+                        ? barColor
+                        : barColor(key, value, maxValue)
+                      : "white"
+                  }
                   width={width}
                   style={{
                     overflow: "hidden",
