@@ -11,6 +11,7 @@
   color: var(--var-color-app-text);
   padding: 20px;
   overflow-y: auto;
+  font-family: "Roboto", sans-serif;
 }
 
 svg text {
